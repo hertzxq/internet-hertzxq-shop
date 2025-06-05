@@ -1,40 +1,35 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
 
-export const useCartStore = defineStore('cart', () => {
-  const items = ref([]);
-
-  // Добавление товара в корзину
-  const addToCart = (product) => {
-    const existingItem = items.value.find(item => item.id === product.id);
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      items.value.push({ ...product, quantity: 1 });
-    }
-  };
-
-  // Увеличение количества
-  const increaseQuantity = (itemId) => {
-    const item = items.value.find(item => item.id === itemId);
-    if (item) item.quantity += 1;
-  };
-
-  // Уменьшение количества
-  const decreaseQuantity = (itemId) => {
-    const item = items.value.find(item => item.id === itemId);
-    if (item && item.quantity > 1) item.quantity -= 1;
-  };
-
-  // Удаление товара
-  const removeItem = (itemId) => {
-    items.value = items.value.filter(item => item.id !== itemId);
-  };
-
-  // Вычисление общей стоимости
-  const totalPrice = computed(() => {
-    return items.value.reduce((total, item) => total + item.price * item.quantity, 0);
-  });
-
-  return { items, addToCart, increaseQuantity, decreaseQuantity, removeItem, totalPrice };
+export const useCartStore = defineStore('cart', {
+  state: () => ({
+    items: [],
+  }),
+  getters: {
+    totalPrice: (state) => state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  },
+  actions: {
+    addToCart(product) {
+      const item = this.items.find(i => i.id === product.id);
+      if (item) {
+        item.quantity++;
+      } else {
+        const safeQuantity = product.quantity && product.quantity > 0 ? product.quantity : 1;
+        this.items.push({ ...product, quantity: safeQuantity });
+      }
+    },
+    increaseQuantity(id) {
+      const item = this.items.find(i => i.id === id);
+      if (item) item.quantity++;
+    },
+    decreaseQuantity(id) {
+      const item = this.items.find(i => i.id === id);
+      if (item && item.quantity > 1) item.quantity--;
+    },
+    removeItem(id) {
+      this.items = this.items.filter(i => i.id !== id);
+    },
+    clearCart() {
+      this.items = [];
+    },
+  },
 });
